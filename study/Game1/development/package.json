@@ -1,0 +1,25 @@
+{
+  "name": "strategy-game",
+  "version": "1.0.0",
+  "description": "2D Turn-Based Strategy Game Engine",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack serve --open",
+    "build": "webpack --mode production",
+    "test": "jest"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "ts-loader": "^9.5.1",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1",
+    "html-webpack-plugin": "^5.6.0",
+    "@types/jest": "^29.5.11",
+    "@types/html-minifier-terser": "^7.0.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1"
+  }
+} 

@@ -1,0 +1,91 @@
+# Game Evolution Between Versions
+
+## Version 0.0.01 to 0.0.04 Evolution
+
+### Initial Version (0.0.01)
+- Basic implementation with a monolithic structure
+- 1,309 lines of code in main.js
+- Fundamental gameplay mechanics and UI elements
+- Basic turn-based system with simple unit placement
+
+### Version 0.0.02
+- Added intelligent unit movement and targeting systems
+- Implemented combat adjacency and range mechanics  
+- Enhanced UI with unit stats and selection features
+- Increased code complexity with more game logic
+
+### Version 0.0.03
+- Added comprehensive collision detection
+- Implemented unrestricted combat mechanics
+- Added multiple layers of unit collision prevention
+- Developed automatic collision resolution systems
+- Improved game state management
+
+### Latest Version (0.0.04)
+- Expanded to 2,431 lines of code in main.js (nearly doubled from 0.0.01)
+- Added player health tracking system (10 HP per player)
+- Implemented round end detection when one player has no units
+- Added unit reset to original positions after each round
+- Developed segmented heart health display for both players
+- Code claims to have modular architecture but still exists as a single file
+- Added multi-threaded processing for AI and physics (through Web Workers)
+
+## Code Size Growth
+- Version 0.0.01: 55KB, 1,309 lines
+- Version 0.0.04: 105KB, 2,431 lines
+- Growth rate: 91% increase in code size in a short period
+
+## Total Line Count By Version (All Files)
+
+### Version 0.0.01
+- main.js: 1,309 lines
+- styles.css: 65 lines
+- index.html: 19 lines
+- server.js: 65 lines
+- package.json: 11 lines
+- README.md: 44 lines
+- version_info.txt: 2 lines
+- **Total: 1,515 lines of code**
+
+### Version 0.0.02
+- main.js: 2,015 lines (+706 from v0.0.01)
+- styles.css: 65 lines (unchanged)
+- index.html: 19 lines (unchanged)
+- server.js: 65 lines (unchanged)
+- package.json: 11 lines (unchanged)
+- README.md: 59 lines (+15)
+- version_info.txt: 8 lines (+6)
+- **Total: 2,242 lines of code (+727, 48% increase)**
+
+### Version 0.0.03
+- main.js: 2,129 lines (+114 from v0.0.02)
+- styles.css: 65 lines (unchanged)
+- index.html: 19 lines (unchanged)
+- server.js: 65 lines (unchanged)
+- package.json: 11 lines (unchanged)
+- README.md: 66 lines (+7)
+- version_info.txt: 8 lines (unchanged)
+- **Total: 2,363 lines of code (+121, 5.4% increase)**
+
+### Version 0.0.04
+- main.js: 2,431 lines (+302 from v0.0.03)
+- styles.css: 65 lines (unchanged)
+- index.html: 19 lines (unchanged)
+- server.js: 65 lines (unchanged)
+- package.json: 11 lines (unchanged)
+- **Total: 2,591 lines of code (+228, 9.6% increase)**
+
+## Performance Evolution
+Based on the README.md benchmarks:
+- FPS improved from 45 to 60 (33% improvement)
+- Memory usage increased from 32MB to 42MB (31% increase)
+- Load time decreased from 800ms to 650ms (19% improvement)
+
+## Technical Evolution
+1. Initial monolithic architecture with all code in a single file
+2. Introduction of more complex game mechanics over iterations
+3. Addition of multithreading capabilities for performance optimization
+4. Claims of modular architecture in the latest version, though still maintained in a single file
+5. Apparent intent to eventually split the code into proper modules
+
+The code has evolved significantly in functionality and complexity, but architectural refactoring to proper module separation hasn't actually been implemented yet despite being mentioned in the documentation. 

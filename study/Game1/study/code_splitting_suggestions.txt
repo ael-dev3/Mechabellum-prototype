@@ -1,0 +1,130 @@
+# Code Splitting Suggestions
+
+## Proposed Module Structure
+
+The current monolithic main.js file (2,431 lines) should be split into the following modules:
+
+### 1. Core System Modules
+
+#### 1.1. `core/config.js` (Configuration)
+- Game settings, constants, and configuration options
+- Screen dimensions and responsive layout parameters
+- Debug flags and performance settings
+
+#### 1.2. `core/engine.js` (Game Engine)
+- Core game loop
+- Module coordination and initialization
+- Game state management
+- Event system for cross-module communication
+
+#### 1.3. `core/input.js` (Input System) 
+- Mouse event handling
+- Touch input support
+- Input state tracking
+- Event dispatching to appropriate systems
+
+### 2. Game Logic Modules
+
+#### 2.1. `game/states.js` (Game States)
+- Game state definitions
+- State transition logic
+- Turn management
+
+#### 2.2. `game/field.js` (Game Field)
+- Grid system implementation
+- Zone management (player, enemy, combat zones)
+- Coordinate conversion (grid to screen and vice versa)
+
+#### 2.3. `game/units.js` (Unit System)
+- Unit types definitions
+- Unit creation and management
+- Unit state tracking
+- Unit data structures
+
+#### 2.4. `game/movement.js` (Movement System)
+- Unit movement logic
+- Pathfinding
+- Collision detection and resolution
+- Movement animations
+
+#### 2.5. `game/combat.js` (Combat System)
+- Attack and damage calculations
+- Combat resolution
+- HP management
+- Unit defeat detection
+
+#### 2.6. `game/ai.js` (AI System)
+- Enemy decision-making
+- Unit placement strategy
+- Movement and targeting AI
+- Difficulty scaling
+
+### 3. Rendering Modules
+
+#### 3.1. `render/renderer.js` (Renderer)
+- Main rendering coordination
+- Canvas management
+- Render queue and optimization
+
+#### 3.2. `render/field-renderer.js` (Field Renderer)
+- Game field visualization
+- Grid rendering
+- Zone highlighting
+
+#### 3.3. `render/unit-renderer.js` (Unit Renderer) 
+- Unit visualization
+- Unit animations
+- HP bars and effects
+
+#### 3.4. `render/ui-renderer.js` (UI Renderer)
+- Button rendering
+- UI elements and controls
+- Status displays
+- Health indicators
+
+#### 3.5. `render/animation.js` (Animation System)
+- Animation framework
+- Combat effects
+- Movement animation
+- Visual feedback
+
+### 4. Utility Modules
+
+#### 4.1. `utils/math.js` (Math Utilities)
+- Distance calculations
+- Interpolation functions
+- Random number generation
+- Dice roll simulation
+
+#### 4.2. `utils/workers.js` (Multithreading)
+- Web Worker management
+- Task distribution
+- Thread communication
+- Performance optimization
+
+#### 4.3. `utils/storage.js` (Storage)
+- Game saving/loading
+- Settings persistence
+- Score tracking
+
+## Implementation Strategy
+
+1. **Create Directory Structure**: Set up the module directories first
+2. **Extract Constants and Configuration**: Move all game constants to config.js
+3. **Extract Independent Utilities**: Move utility functions that don't depend on game state
+4. **Implement Event System**: Create an event bus for cross-module communication
+5. **Extract Major Systems**: Move rendering, input, and core game systems one by one
+6. **Refine Interfaces**: Define clear APIs between modules to reduce coupling
+7. **Extract Game Logic Systems**: Move AI, combat, and movement systems
+8. **Implement Worker Integration**: Properly implement multithreading with Web Workers
+9. **Refactor Main Game Loop**: Update the game loop to coordinate the separate modules
+
+## Benefits of Module Splitting
+
+1. **Improved Maintainability**: Smaller files are easier to understand and update
+2. **Better Collaboration**: Team members can work on different modules simultaneously
+3. **Code Reusability**: Modules can be reused in other projects or game modes
+4. **Easier Testing**: Modules can be tested independently
+5. **Better Performance**: Allows for better code optimization and asynchronous loading
+6. **Scalability**: Makes it easier to add new features without disrupting existing code
+7. **Clearer Architecture**: Makes the project structure more understandable for new developers 

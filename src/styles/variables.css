@@ -1,0 +1,38 @@
+:root {
+  /* Typography */
+  --font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter,
+    Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-size-sm: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 20px;
+  --font-size-xl: 28px;
+
+  /* Colors */
+  --color-bg: #0f1115;
+  --color-surface: #171a21;
+  --color-surface-2: #1f2430;
+  --color-text: #e9edf1;
+  --color-muted: #a9b3c1;
+  --color-border: rgba(255, 255, 255, 0.12);
+
+  --color-primary: #8a2be2;
+  --color-primary-hover: #9b53ea;
+  --color-secondary: #4b0082;
+  --color-danger: #dc143c;
+
+  --color-grid-line: rgba(255, 255, 255, 0.12);
+  --color-zone-player: rgba(46, 204, 113, 0.10);
+  --color-zone-neutral: rgba(241, 196, 15, 0.08);
+  --color-zone-enemy: rgba(231, 76, 60, 0.10);
+
+  /* Layout */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.35);
+
+  /* Spacing */
+  --space-1: 8px;
+  --space-2: 12px;
+  --space-3: 16px;
+  --space-4: 24px;
+}

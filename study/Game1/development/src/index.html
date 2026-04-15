@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Turn-Based Game</title>
+  <!-- 
+    To run the server in PowerShell use:
+    cd development
+    npm start
+  -->
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background: linear-gradient(to bottom, #1a1a1a, #0a0a0a);
+      color: white;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      width: 100vw;
+      position: relative;
+    }
+    #game-container {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 400px;
+    }
+    .start-button {
+      background: linear-gradient(to bottom, #444, #333);
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.6);
+      border-radius: 8px;
+      padding: 12px 28px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      outline: none;
+      z-index: 100;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 5px rgba(255,255,255,0.1);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      letter-spacing: 1px;
+    }
+    .start-button:hover {
+      background: linear-gradient(to bottom, #555, #444);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.4), 0 0 8px rgba(255,255,255,0.2);
+      border: 2px solid rgba(255, 255, 255, 0.8);
+    }
+    .start-button:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .selected {
+      box-shadow: inset 0 0 15px rgba(255, 255, 255, 0.8) !important;
+      border: 1px solid rgba(255, 255, 255, 0.8) !important;
+    }
+    .back-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 40px;
+      height: 40px;
+      background-color: rgba(0, 0, 0, 0.5);
+      border: 2px solid rgba(255, 255, 255, 0.6);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      z-index: 200;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .back-button.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .back-button:hover {
+      background-color: rgba(40, 40, 40, 0.8);
+      border-color: rgba(255, 255, 255, 0.8);
+      transform: scale(1.1);
+    }
+    .back-button:active {
+      transform: scale(0.95);
+    }
+    .back-button::before {
+      content: '';
+      display: block;
+      width: 12px;
+      height: 12px;
+      border-left: 3px solid rgba(255, 255, 255, 0.8);
+      border-bottom: 3px solid rgba(255, 255, 255, 0.8);
+      transform: rotate(45deg) translateX(2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="back-button" class="back-button"></div>
+    <div id="game-container"></div>
+    <button id="start-button" class="start-button">START</button>
+  </div>
+</body>
+</html> 

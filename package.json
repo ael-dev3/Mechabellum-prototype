@@ -1,0 +1,18 @@
+{
+  "name": "fantasy-autobattler",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "build:hosting": "npm run build && node scripts/prepareHosting.js",
+    "sim": "tsc -p tsconfig.sim.json && node .sim-dist/scripts/simulateMatch.js",
+    "sim:ai": "tsc -p tsconfig.sim.json && node .sim-dist/scripts/simulateAiVsAi.js",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3",
+    "vite": "^7.2.4"
+  }
+}

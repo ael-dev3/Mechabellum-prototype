@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "lib": ["ES2022", "DOM"],
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": ".sim-dist",
+    "rootDir": "."
+  },
+  "include": ["src/core/config/**/*.ts", "src/core/game/**/*.ts", "src/core/state/**/*.ts", "src/core/ai/**/*.ts", "scripts/**/*.ts"]
+}

@@ -1,0 +1,62 @@
+# Analysis of Game1 (Reference Project)
+
+## Overview
+Game1 is a modular, 2D turn-based strategy game engine built with TypeScript. It uses a central `Engine` class to orchestrate various subsystems (Grid, Entity, Combat, AI, UI, Renderer) via dependency injection and an EventBus for loose coupling.
+
+## Key Architecture Components
+
+### 1. Core Engine (`src/core/Engine.ts`)
+-   **Role**: Central orchestrator.
+-   **Pattern**: Dependency Injection. It receives all subsystems (Grid, PathFinder, etc.) in its constructor.
+-   **State Management**: Manages high-level `GameState` (MENU, PLAYING, GAME_OVER) and `TurnState` (PLACEMENT, PLAYER_TURN, ENEMY_TURN).
+-   **Game Loop**: Uses `requestAnimationFrame` for a 60 FPS loop (`processInput` -> `processTurnLogic` -> `renderFrame`).
+
+### 2. Subsystems
+-   **Grid**: Manages the board state, cells, and zones (Player, Enemy, Combat).
+-   **EntityManager**: Handles unit creation, tracking, and lifecycle.
+-   **EventBus**: Decouples systems. The Engine listens for events like `startGame`, `endTurn`, `unitPlaced`.
+-   **Renderer**: Handles canvas drawing. It is separate from the game logic.
+-   **UI**: Manages DOM overlays (menus, buttons) and translates mouse events to canvas coordinates.
+
+## Translation to MB (Fantasy Autobattler)
+
+We can adapt this architecture directly for MB, with specific modifications for the "Autobattler" and "Symmetrical" aspects.
+
+### Shared Concepts
+-   **Grid System**: Essential for placement and movement.
+-   **Phases**: `PLACEMENT` phase matches perfectly. `PLAYER_TURN` becomes `BATTLE_SIMULATION`.
+-   **EventBus**: Crucial for decoupling the complex interactions of an autobattler.
+
+### Key Differences / Adaptations
+1.  **Combat Phase**: Game1 has turn-based combat. MB needs *real-time automated combat*.
+    -   *Change*: The `processTurnLogic` in MB will need to run a physics/combat simulation tick every frame during the Battle Phase, rather than waiting for turn-based moves.
+2.  **Symmetry**: MB requires strict symmetry enforcement.
+    -   *Change*: The `Grid` system needs a `validateSymmetry()` method checked during the Placement Phase.
+3.  **Tech Stack**: Game1 uses Webpack. MB uses Vite (already set up).
+
+## Step-by-Step Implementation Plan for MB
+
+### Phase 1: Core Architecture Setup (Foundation)
+1.  **EventBus**: Create a type-safe EventBus to handle game events (`src/core/EventBus.ts`).
+2.  **Grid System**: Implement the Grid and Cell classes (`src/core/grid/`).
+    -   Add `CellZone` logic (Player vs Enemy side).
+3.  **Engine Skeleton**: Create the `GameEngine` class that initializes these systems.
+
+### Phase 2: Game Loop & Rendering
+1.  **Game Loop**: Implement the `requestAnimationFrame` loop in `GameEngine`.
+2.  **Renderer**: Create a `CanvasRenderer` (or WebGL) to draw the grid and debug cells.
+3.  **Input Handling**: Port the `handleMouseDown`/`Move`/`Up` logic for drag-and-drop placement.
+
+### Phase 3: Entities & Placement
+1.  **Unit Class**: Define the base `Unit` class with stats (HP, Attack, Range).
+2.  **EntityManager**: Manage unit lists.
+3.  **Placement Logic**: Implement the "Drag to Grid" mechanic from Game1, adding the **Symmetry Check**.
+
+### Phase 4: Autobattle Simulation
+1.  **Combat System**: Create a `CombatSimulator` that runs during the Battle Phase.
+    -   *Logic*: Find nearest enemy -> Move towards -> Attack if in range.
+2.  **State Machine**: Update `GameEngine` to switch from `PLACEMENT` to `BATTLE` when "Ready" is clicked.
+
+### Phase 5: Polish & Meta
+1.  **UI Overlay**: Connect the Main Menu (already started) to the Game Engine.
+2.  **Firebase Integration**: Save match results or user profiles (as per guidelines).

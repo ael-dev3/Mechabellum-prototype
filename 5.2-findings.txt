@@ -1,0 +1,96 @@
+﻿MB Prototype - Project Outline (Web, Mobile-First)
+Date: 2025-12-21
+
+How to run
+- npm install
+- npm run dev
+
+Hosting (Firebase)
+- npm run build:hosting
+- npx firebase deploy --only hosting --project <your-project-id>
+- `hosting/` is the deploy output (generated from builds). Keep `.ai/` and `study/` outside it.
+
+Versioning
+- The main Start button launches the latest version and must show the version number.
+- No legacy builds are stored in this repo.
+
+LLM instructions
+- After each prompt, automatically ensure the dev server is running at http://localhost:5173.
+- If not running, start `npm run dev` and confirm the URL responds.
+- Default to running dev commands in CMD unless explicitly asked otherwise.
+
+Game loop (round-based)
+- Match: You vs Enemy, both start at 50 HP.
+- Phase 1 (first round only): DEPLOYMENT
+  - Unlock units with gold, then place (permanent placements for the whole match).
+  - You are limited by your per-turn placement slots (starts at 1).
+  - Press "Ready" to begin (or let the timer auto-start the battle).
+- Phase 2: BATTLE
+  - Units spawn from the permanent placement layout and fight automatically.
+  - Movement is biased toward meeting in the Neutral zone (no pushback/displacement mechanics).
+  - Battle ends when one side is eliminated, or on the time limit.
+- Phase 3: INTERMISSION (180s)
+  - The board shows both sides’ placements for planning.
+  - You can unlock/place during the timer.
+  - Battle auto-starts at 0, or press "Ready" to start sooner.
+
+End-of-round damage
+- Surviving units deal damage based on unit cost (buildings do not).
+- The match ends when a player reaches 0 HP.
+
+Grid + placement rules
+- Grid has 3 zones:
+  - PLAYER zone (bottom): you can place here.
+  - NEUTRAL zone (middle): no placement.
+  - ENEMY zone (top): enemy spawns here (you cannot place here).
+- Flank lanes (4 columns per side) unlock on turn 2; enemy can deploy on your flanks (red) and you can deploy on enemy flanks (green). Flank deployments activate after 5s in battle.
+- Placements are permanent until the match ends.
+  - A unit that dies in battle will re-spawn next battle in the same placed cell.
+
+Enemy behavior
+- Enemy builds its own roster with its own gold (loans included).
+- Enemy placements persist across rounds and can be upgraded between battles.
+- Spawns are biased toward counters and avoid exact mirrors when possible.
+
+Economy
+- Start-of-turn gold: max(2, turn)
+  - Turn 1: 2 gold
+  - Turn 2: 2 gold
+  - Turn 3: 3 gold
+  - ...
+- Unit costs (unlock is one-time; placement is per unit):
+  - Knight: unlock 1g, place 1g
+  - Archer: unlock 2g, place 2g
+  - Mage: unlock 3g, place 3g
+  - Goblin Squad: unlock 1g, place 1g
+  - Sniper: unlock 5g, place 5g
+  - Golem: unlock 4g, place 4g
+- Placements per turn:
+  - Start with 1 placement per turn.
+  - Buy Slot grants +1 placement for this turn only (2g each time).
+- “+2 Gold” option:
+  - Gain +2 gold now.
+  - Next turn you start with 3 less gold.
+  - Once per turn.
+
+Buildings
+- Buildings do not use placement slots and can be destroyed/rebuilt.
+- Gold Mine: +1 gold per turn (scales with upgrades).
+- Archer Tower: ranged attacks (max 2).
+- Goblin Cave: spawns goblins each second; upgrades add more spawns.
+
+UI / UX rules
+- Mobile-first layout (web).
+- Tooltips exist for buttons and grid zones:
+  - Desktop: hover.
+  - Touch: long-press.
+- Error toasts are single-instance: update or replace the current error toast instead of stacking.
+- Unit visuals:
+  - Unit type has a consistent fill color across both teams.
+  - Team is shown via border color (player vs enemy).
+
+Current Bugs / Issues (2025-12-22)
+
+Open / verify
+- Units could oscillate between two tiles when they meet diagonally; movement now holds position when in range and uses a diagonal tie-breaker (please verify).
+- Enemy AI mirrored player units and ignored the +2 gold loan; AI now generates its own randomized plan with a loan option (please verify).

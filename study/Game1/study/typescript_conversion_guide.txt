@@ -1,0 +1,381 @@
+# TypeScript Conversion Guide
+
+## Conversion Methodologies
+
+### 1. Incremental Approach
+- Convert file-by-file while maintaining JavaScript interoperability
+- Enables gradual conversion without breaking existing functionality
+- Less risky but takes longer to see full benefits
+
+### 2. Parallel Codebase Approach
+- Create a separate TypeScript codebase alongside the original
+- Rewrite components one by one, testing thoroughly
+- Enables clean architecture from the start but requires more upfront effort
+
+### 3. Big Bang Approach
+- Convert the entire codebase at once
+- Quick to get full TypeScript benefits but highest risk
+- Only feasible for smaller projects with thorough testing
+
+## Recommended Approach for This Project
+Given the monolithic nature of main.js (2,431 lines) and the need for modularization, the recommended approach is a **hybrid strategy**:
+
+1. Create TypeScript infrastructure
+2. Extract and convert utility functions first
+3. Create core type definitions and interfaces
+4. Refactor into modules during conversion (following code_splitting_suggestions.txt)
+5. Incrementally convert and test each module
+
+## Step-by-Step Conversion Plan
+
+### Phase 1: Setup and Infrastructure (1-2 days)
+
+1. **Setup TypeScript Environment**
+   ```bash
+   npm install --save-dev typescript ts-loader webpack webpack-cli
+   ```
+
+2. **Create TypeScript Configuration**
+   Create tsconfig.json:
+   ```json
+   {
+     "compilerOptions": {
+       "target": "ES2015",
+       "module": "ESNext",
+       "moduleResolution": "node",
+       "strict": true,
+       "sourceMap": true,
+       "outDir": "./dist",
+       "rootDir": "./src",
+       "esModuleInterop": true,
+       "lib": ["DOM", "ESNext"]
+     },
+     "include": ["src/**/*"],
+     "exclude": ["node_modules"]
+   }
+   ```
+
+3. **Setup Webpack for Building**
+   Create webpack.config.js:
+   ```javascript
+   const path = require('path');
+
+   module.exports = {
+     entry: './src/index.ts',
+     mode: 'development',
+     module: {
+       rules: [
+         {
+           test: /\.tsx?$/,
+           use: 'ts-loader',
+           exclude: /node_modules/
+         }
+       ]
+     },
+     resolve: {
+       extensions: ['.ts', '.tsx', '.js']
+     },
+     output: {
+       filename: 'bundle.js',
+       path: path.resolve(__dirname, 'dist')
+     },
+     devtool: 'source-map'
+   };
+   ```
+
+4. **Create Project Structure**
+   Following the module structure from code_splitting_suggestions.txt:
+   ```
+   src/
+     core/
+     game/
+     render/
+     utils/
+     index.ts
+   ```
+
+### Phase 2: Define Core Types (2-3 days)
+
+1. **Create Common Types**
+   Create src/types/index.ts:
+   ```typescript
+   // Game State Types
+   export enum GameState {
+     MENU = 'menu',
+     PLAYING = 'playing',
+     PAUSED = 'paused'
+   }
+
+   export enum TurnState {
+     PLACEMENT = 'placement',
+     ENEMY_TURN = 'enemy_turn',
+     PLAYER_TURN = 'player_turn'
+   }
+
+   // Unit Types
+   export interface UnitStats {
+     name: string;
+     color: string;
+     size: number;
+     selected: boolean;
+     ac: number;         // Armor Class
+     hp: number;         // Hit points
+     damage: string;     // Damage dice
+     attack: number;     // Attack bonus
+     range: number;      // Attack range
+   }
+
+   export interface Unit {
+     type: UnitStats;
+     x: number;
+     y: number;
+     gridX: number;
+     gridY: number;
+     turnPlaced: number;
+     originalGridX: number;
+     originalGridY: number;
+     hp: number;
+     maxHp: number;
+     lastAttackTime: number;
+     inCombat: boolean;
+     isEnemy?: boolean;
+     defeated?: boolean;
+   }
+
+   // Game Field Types
+   export interface GridPosition {
+     x: number;
+     y: number;
+   }
+
+   export interface GameField {
+     width: number;
+     height: number;
+     x: number;
+     y: number;
+     cornerRadius: number;
+     borderWidth: number;
+     gridSize: number;
+     gridColumns: number;
+     gridRows: number;
+     startZoneRows: number;
+     enemyZoneRows: number;
+   }
+
+   // UI Types
+   export interface Button {
+     x: number;
+     y: number;
+     width: number;
+     height: number;
+     label: string;
+     hovered: boolean;
+   }
+
+   export interface DragDropState {
+     isDragging: boolean;
+     draggedUnit: UnitStats | null;
+     startX: number;
+     startY: number;
+     currentX: number;
+     currentY: number;
+     isRepositioning: boolean;
+   }
+
+   // Animation Types
+   export interface MovementState {
+     unit: Unit;
+     startGridX?: number;
+     startGridY?: number;
+     targetGridX?: number;
+     targetGridY?: number;
+   }
+
+   export interface CombatAnimation {
+     x: number;
+     y: number;
+     text: string | number;
+     color: string;
+     alpha: number;
+     startTime: number;
+   }
+   ```
+
+2. **Create Configuration Interface**
+   Create src/core/config.ts:
+   ```typescript
+   export interface GameConfig {
+     fps: number;
+     canvasWidth: number;
+     canvasHeight: number;
+     uiMargin: {
+       top: number;
+       right: number;
+       bottom: number;
+       left: number;
+     };
+     ui: {
+       buttonSize: number;
+       buttonMargin: number;
+       buttonOffset: number;
+     };
+   }
+
+   export const defaultConfig: GameConfig = {
+     fps: 60,
+     canvasWidth: window.innerWidth,
+     canvasHeight: window.innerHeight,
+     uiMargin: {
+       top: 60,
+       right: Math.max(60, window.innerWidth * 0.15),
+       bottom: 60,
+       left: Math.max(60, window.innerWidth * 0.15)
+     },
+     ui: {
+       buttonSize: 50,
+       buttonMargin: 10,
+       buttonOffset: 25
+     }
+   };
+   ```
+
+### Phase 3: Convert and Modularize Core Systems (1 week)
+
+1. **Extract Utility Functions**
+   Create src/utils/math.ts:
+   ```typescript
+   /**
+    * Limit a value between a min and max value
+    */
+   export const limitBounds = (value: number, min: number, max: number): number => {
+     return Math.max(min, Math.min(max, value));
+   };
+
+   /**
+    * Roll a dice with given sides
+    */
+   export const rollDice = (sides: number): number => {
+     return Math.floor(Math.random() * sides) + 1;
+   };
+
+   /**
+    * Roll damage dice (e.g., 1d4)
+    */
+   export const rollDamageDice = (diceNotation: string): number => {
+     const [count, sides] = diceNotation.split('d').map(Number);
+     let total = 0;
+     for (let i = 0; i < count; i++) {
+       total += rollDice(sides);
+     }
+     return total;
+   };
+   ```
+
+2. **Create Rendering Module**
+   Create src/render/renderer.ts with proper typing
+
+3. **Convert Game Field Logic**
+   Create src/game/field.ts with proper typing
+
+4. **Continue with remaining modules**
+   Following the structure in code_splitting_suggestions.txt
+
+### Phase 4: Implement Web Workers with TypeScript (2-3 days)
+
+1. **Create Worker Type Definitions**
+   Define message types for worker communication
+
+2. **Create Worker Implementation**
+   Implement worker logic with proper typing
+
+3. **Connect Worker to Main Thread**
+   Implement type-safe communication between threads
+
+### Phase 5: Testing and Optimization (Ongoing)
+
+1. **Implement Unit Tests**
+   Use Jest or Mocha with TypeScript support
+
+2. **Performance Profiling**
+   Ensure TypeScript hasn't introduced performance issues
+
+3. **Type Coverage Analysis**
+   Use tools like typescript-coverage-report to ensure proper typing
+
+## Special TypeScript Features for Game Development
+
+### 1. Discriminated Unions for State Management
+```typescript
+type GameplayState = 
+  | { type: 'menu' }
+  | { type: 'playing', turnState: TurnState }
+  | { type: 'paused', previousState: GameplayState };
+```
+
+### 2. Type Guards for Entity Checks
+```typescript
+function isEnemyUnit(unit: Unit): boolean {
+  return !!unit.isEnemy;
+}
+```
+
+### 3. Readonly Types for Immutable Data
+```typescript
+type UnitType = Readonly<{
+  name: string;
+  color: string;
+  // ...other properties
+}>;
+```
+
+### 4. Generic Renderer Types
+```typescript
+interface Renderable {
+  render(ctx: CanvasRenderingContext2D): void;
+}
+
+class UnitRenderer<T extends Unit> implements Renderable {
+  constructor(private unit: T) {}
+  
+  render(ctx: CanvasRenderingContext2D): void {
+    // Rendering logic
+  }
+}
+```
+
+## Conversion Tools
+
+1. **Automatic Type Generation**
+   - QuickType: Generate TypeScript types from JSON data
+   - json2ts: Online converter for JSON to TypeScript interfaces
+
+2. **Migration Assistants**
+   - ts-migrate: Facebook's tool for JavaScript to TypeScript conversion
+   - TypeScript's --allowJs and --checkJs flags
+
+3. **Linting and Formatting**
+   - ESLint with @typescript-eslint
+   - Prettier for consistent formatting
+
+## Expected Outcomes
+
+1. **Codebase Size**: Expect a 10-20% increase in line count due to type definitions
+2. **Bug Reduction**: Approximately 15-30% fewer runtime bugs
+3. **Performance**: No significant runtime performance difference
+4. **Development Speed**: Initial slowdown during conversion, then 20-30% faster development
+5. **Code Quality**: Significant improvement in readability and maintainability
+
+## Project-Specific Recommendations
+
+1. **Start with Input and Rendering Systems**: These have clearer interfaces
+2. **Pay Special Attention to Combat Logic**: Complex calculations benefit most from typing
+3. **Use Enums for State Management**: Replace string constants with proper enums
+4. **Create a Unified Event System**: Helps decouple modules during conversion
+
+## Pitfalls to Avoid
+
+1. **Any Type Overuse**: Avoid using 'any' as an easy escape
+2. **Partial Conversions**: Don't leave some modules partially typed
+3. **Neglecting Tests**: Always test after converting each module
+4. **Type Assertion Overuse**: Avoid type assertions (as Type) when possible
+5. **Forgetting Union Types**: Use unions instead of overly permissive types 

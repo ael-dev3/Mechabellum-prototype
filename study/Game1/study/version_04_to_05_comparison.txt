@@ -1,0 +1,44 @@
+Version 0.0.04 vs 0.0.05 Comparison
+
+1) Directory Structure:
+   - v0.0.04: root contains index.html, server.js, css/, js/, prompt/, package.json.
+   - v0.0.05: reorganized into src/ (with ai/, combat/, core/, entity/, grid/, ui/), public/, tests/, plus webpack.config.js, tsconfig.json.
+
+2) Language & Tooling:
+   - v0.0.04: plain ES5 JavaScript, no bundler, minimal Node.js server.
+   - v0.0.05: full TypeScript support, Webpack build pipeline, npm scripts for build/dev.
+
+3) Modularization:
+   - v0.0.04: single bundled .js under js/; logic intermingled.
+   - v0.0.05: feature modules (Engine.ts, grid, entity, combat, AI, UI) with clear separation of concerns.
+
+4) Build & Dev Workflow:
+   - v0.0.04: manual include of scripts, no hot reload.
+   - v0.0.05: automated builds, TS compilation, live reload via webpack dev server.
+
+5) Testing:
+   - v0.0.04: no test suite.
+   - v0.0.05: tests/ folder added (unit tests for core functionality).
+
+6) Documentation:
+   - v0.0.04: no in-folder README.
+   - v0.0.05: README.md added at version level, updated systemPrompt.txt remains.
+
+7) Feature Evolution:
+   - v0.0.04: basic UI prompt, minimal game loop in server.js.
+   - v0.0.05: engine core extracted to Engine.ts, grid-based movement, combat and AI modules decoupled, stronger type safety.
+
+8) Gameplay Improvements:
+   - v0.0.04: simple placement/turn logic; v0.0.05: explicit GameState and TurnState enums with enforced transitions.
+   - v0.0.04: single-threaded update/render loop; v0.0.05: optimized gameLoop via requestAnimationFrame at 60FPS and multithreaded AI/pathfinding using Web Workers.
+   - v0.0.04: adjacent-only movement without pathfinding; v0.0.05: PathFinder class for multi-step path calculation.
+   - v0.0.04: inline combat resolution; v0.0.05: dedicated CombatResolver with robust dice-roll API, damage animations, and HP bar updates via grid.updateHP.
+   - v0.0.04: rudimentary AI with random movement; v0.0.05: AIController module for strategic target selection, repositioning, and turn-based decision making.
+   - v0.0.04: static canvas UI; v0.0.05: responsive canvas sizing, gradient backgrounds, hover highlights, drag-and-drop placement, HP demo timer, and unit stat panel.
+   - v0.0.04: minimal visual feedback; v0.0.05: hover effects, real-time UI updates, zone-based click handlers, and enhanced feedback on HP changes.
+
+Summary of Gameplay Changes:
+   v0.0.05 enriches the gameplay experience with structured turns, responsive UI, performance optimizations, and modular game systems.
+
+Summary:
+v0.0.05 represents a major refactor: migrating to TypeScript, introducing a modern build pipeline, modular architecture, and testing. These changes greatly improve code maintainability, scalability, and developer experience.

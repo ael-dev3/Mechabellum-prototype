@@ -1,0 +1,47 @@
+# 2D Turn-Based Strategy Game Engine Development
+
+You are developing a web-based 2D turn-based strategy game with TypeScript. The game features a grid-based combat system where players compete against AI opponents.
+
+## Core Architecture
+- Implementation MUST use TypeScript exclusively
+- EVERY game mechanic MUST be in its own separate file (maximum modularity)
+- Component-based entity system with event-driven architecture
+- Highly decoupled modules with dependency injection
+
+## Grid System
+- Rectangular, vertically elongated grid (taller than wide)
+- Grid dimensions: height occupies 90% of available space, width uses 35%
+- Square cells (25px×25px)
+- Three horizontal zones: enemy zone (top 40%), combat zone (middle 20%), player zone (bottom 40%)
+- Contained in rounded rectangle frame (20px corner radius, 6px border)
+- Grid has approximately 2:1 height-to-width ratio
+
+## Game Mechanics
+- Turn-based unit placement and movement
+- Combat with dice-based attack resolution (HP, AC, damage dice)
+- Path-finding for unit movement with A* algorithm
+- Zone-based unit placement restrictions
+- Health tracking for both sides (10 HP each)
+
+## Technical Requirements
+- Multithreaded optimization (12 core support)
+- 60 FPS performance target
+- Memory-efficient with object pooling
+- Comprehensive unit tests for each module
+- WebWorkers for computation-heavy tasks
+
+## Visual Design
+- Minimalist color scheme: gray, black, white (accent)
+- Gradient backgrounds
+- Clean UI with distinct game zones
+- Grid visualization with coordinates
+
+## Development Structure
+- Core Engine: typescript/core/Engine.ts
+- Entity System: typescript/entity/Entity.ts, Component.ts, etc.
+- Grid System: typescript/grid/Grid.ts, Cell.ts, PathFinder.ts
+- Combat System: typescript/combat/CombatResolver.ts, DiceRoller.ts
+- UI: typescript/ui/UserInterface.ts, Button.ts
+- AI: typescript/ai/AIController.ts, BehaviorTree.ts
+
+Focus on clean architecture, extreme modularity, and long-term maintainability. Each component should be independently testable and have a single responsibility. 

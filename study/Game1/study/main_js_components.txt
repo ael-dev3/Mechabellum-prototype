@@ -1,0 +1,73 @@
+# Main.js Components Analysis
+
+## Major Components of main.js
+
+### 1. Configuration and Constants
+- Game configuration settings (FPS, canvas dimensions, UI settings)
+- Game state enumeration (MENU, PLAYING, PAUSED)
+- Turn state enumeration (PLACEMENT, ENEMY_TURN, PLAYER_TURN)
+- Unit type definitions with stats (WARRIOR with AC, HP, damage, etc.)
+
+### 2. GameEngine Class
+Core class that implements the entire game functionality:
+
+#### 2.1 Initialization and Setup
+- Constructor initializes canvas, game state, and properties
+- Canvas setup and field dimension calculations
+- Event listeners for user interactions
+
+#### 2.2 Game Field Management
+- Grid system implementation (converting between screen and grid coordinates)
+- Field rendering with zones (player zone, enemy zone, combat zone)
+- Unit placement validation
+
+#### 2.3 Game State Management
+- Turn-based gameplay mechanics
+- State transitions between placement, movement, and combat
+- Round completion and reset logic
+
+#### 2.4 Unit Management
+- Unit creation and placement
+- Unit movement logic
+- Unit combat mechanics
+- Unit collision detection and resolution
+
+#### 2.5 AI System
+- Enemy unit placement
+- Enemy movement and targeting logic
+- Combat decision making
+
+#### 2.6 Combat System
+- Attack and damage calculations using dice mechanics
+- HP tracking and unit defeat detection
+- Combat animations
+
+#### 2.7 Rendering System
+- Game loop implementation
+- Background and field rendering
+- Unit and UI element drawing
+- Animation handling
+
+#### 2.8 Input Handling
+- Mouse interaction (clicks, drag-and-drop)
+- Button interaction logic
+- Unit selection and placement
+
+#### 2.9 Multithreaded Optimization
+- Web Workers implementation (claimed but not fully implemented)
+- Performance optimization considerations
+
+### 3. Self-Executing Function Wrapper
+- The entire codebase is wrapped in a self-executing function to avoid global namespace pollution
+- DOM ready event listener to initialize the game
+
+## Code Organization Analysis
+The code follows a somewhat object-oriented approach with the GameEngine class containing most functionality, but suffers from several issues:
+
+1. **Monolithic Design**: Almost all functionality is contained within a single large class
+2. **Method Bloat**: Many methods are lengthy and handle multiple responsibilities
+3. **Tight Coupling**: Game components are highly interdependent
+4. **Limited Abstraction**: Minimal separation between game logic, rendering, and input handling
+5. **Mixed Concerns**: UI, game logic, and rendering are intertwined
+
+Despite claims of "modular architecture" in the version notes, the code remains in a single file without proper modularization. 
