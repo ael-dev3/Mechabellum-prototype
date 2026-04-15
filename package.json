@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "build:hosting": "npm run build && node scripts/prepareHosting.js",
+    "test:sim": "tsc -p tsconfig.sim.json && node .sim-dist/scripts/testGameplayScenarios.js",
+    "test": "npm run build && npm run test:sim",
     "sim": "tsc -p tsconfig.sim.json && node .sim-dist/scripts/simulateMatch.js",
     "sim:ai": "tsc -p tsconfig.sim.json && node .sim-dist/scripts/simulateAiVsAi.js",
     "preview": "vite preview"

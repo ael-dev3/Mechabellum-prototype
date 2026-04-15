@@ -13,6 +13,12 @@ import { isEnemyDeployableCell, isPlayerFlankCell } from './grid';
 import { GAME_CONFIG } from '../config/gameConfig';
 import { addXp, xpRequiredForTier } from './xp';
 
+interface EnemyPlacement {
+  type: UnitType;
+  anchor: { x: number; y: number };
+  deploymentIds: number[];
+}
+
 export const spawnEnemyUnits = (params: {
   grid: GridState;
   playerUnits: readonly UnitState[];
@@ -48,6 +54,7 @@ export const spawnEnemyUnits = (params: {
   const unlockedUnits: Record<UnitType, boolean> = { ...params.enemyUnlockedUnits };
   let placementSlots = params.enemyPlacementSlots;
   let nextPlacementSlotCost = params.enemyNextPlacementSlotCost;
+  const newPlacements: EnemyPlacement[] = [];
 
   const nextRand = (): number => {
     // xorshift32
@@ -128,7 +135,11 @@ export const spawnEnemyUnits = (params: {
     addFootprintToOccupied(deployment.type, deployment);
   }
 
-  const isAnchorValid = (unitType: UnitType, anchor: { x: number; y: number }): boolean => {
+  const isAnchorValidWithOccupied = (
+    unitType: UnitType,
+    anchor: { x: number; y: number },
+    occupiedKeys: ReadonlySet<string>
+  ): boolean => {
     const footprint = getPlacementFootprint(unitType);
     for (let dy = 0; dy < footprint.height; dy++) {
       for (let dx = 0; dx < footprint.width; dx++) {
@@ -146,13 +157,16 @@ export const spawnEnemyUnits = (params: {
         ) {
           return false;
         }
-        if (occupied.has(keyOf(x, y))) return false;
+        if (occupiedKeys.has(keyOf(x, y))) return false;
       }
     }
     return true;
   };
 
-  const getAnchorsForType = (unitType: UnitType): Array<{ x: number; y: number }> => {
+  const getAnchorsForType = (
+    unitType: UnitType,
+    occupiedKeys: ReadonlySet<string> = occupied
+  ): Array<{ x: number; y: number }> => {
     const footprint = getPlacementFootprint(unitType);
     const anchors: Array<{ x: number; y: number }> = [];
     const maxX = params.grid.cols - footprint.width;
@@ -160,7 +174,7 @@ export const spawnEnemyUnits = (params: {
     for (let y = 0; y <= maxY; y++) {
       for (let x = 0; x <= maxX; x++) {
         const anchor = { x, y };
-        if (!isAnchorValid(unitType, anchor)) continue;
+        if (!isAnchorValidWithOccupied(unitType, anchor, occupiedKeys)) continue;
         anchors.push(anchor);
       }
     }
@@ -293,8 +307,11 @@ export const spawnEnemyUnits = (params: {
     return 'mid';
   };
 
-  const pickCellForType = (type: UnitType): { x: number; y: number } | null => {
-    const anchors = getAnchorsForType(type);
+  const pickCellForType = (
+    type: UnitType,
+    occupiedKeys: ReadonlySet<string> = occupied
+  ): { x: number; y: number } | null => {
+    const anchors = getAnchorsForType(type, occupiedKeys);
     if (anchors.length === 0) return null;
     shuffleInPlace(anchors);
     const preferences: Array<'front' | 'mid' | 'back'> =
@@ -308,6 +325,73 @@ export const spawnEnemyUnits = (params: {
       if (index >= 0) return anchors[index];
     }
     return anchors[0] ?? null;
+  };
+
+  const placeEnemyFormation = (
+    type: UnitType,
+    anchor: { x: number; y: number },
+    existingIds: readonly number[] = []
+  ): EnemyPlacement => {
+    const deploymentIds: number[] = [];
+    const spawnOffsets = getPlacementOffsets(type);
+    for (let index = 0; index < spawnOffsets.length; index++) {
+      const offset = spawnOffsets[index];
+      const x = anchor.x + offset.x;
+      const y = anchor.y + offset.y;
+      addFootprintToOccupied(type, { x, y });
+      const id = existingIds[index] ?? nextUnitId++;
+      enemyDeployments.push({ id, type, x, y, xp: 0, tier: 1, placedTurn: params.turn });
+      deploymentIds.push(id);
+    }
+    return { type, anchor, deploymentIds };
+  };
+
+  const buildCountsByType = (deployments: readonly DeploymentUnit[]): Record<UnitType, number> => {
+    const counts: Record<UnitType, number> = {
+      KNIGHT: 0,
+      GOBLIN: 0,
+      ARCHER: 0,
+      SNIPER: 0,
+      MAGE: 0,
+      GOLEM: 0,
+    };
+    for (const deployment of deployments) counts[deployment.type] += 1;
+    return counts;
+  };
+
+  const isExactMirror = (deployments: readonly DeploymentUnit[]): boolean => {
+    if (deployments.length !== params.playerUnits.length) return false;
+    const counts = buildCountsByType(deployments);
+    return allTypes.every(type => counts[type] === playerCounts[type]);
+  };
+
+  const buildOccupiedWithoutPlacement = (placement: EnemyPlacement): Set<string> => {
+    const placementIds = new Set(placement.deploymentIds);
+    const occupiedWithoutPlacement = new Set<string>();
+    const addFootprint = (unitType: UnitType, anchor: { x: number; y: number }): void => {
+      const footprint = getUnitFootprint(unitType);
+      for (let dy = 0; dy < footprint.height; dy++) {
+        for (let dx = 0; dx < footprint.width; dx++) {
+          occupiedWithoutPlacement.add(keyOf(anchor.x + dx, anchor.y + dy));
+        }
+      }
+    };
+
+    for (const unit of params.playerUnits) addFootprint(unit.type, unit);
+    for (const building of params.buildings) {
+      const footprint = getBuildingFootprint(building.type);
+      for (let dy = 0; dy < footprint.height; dy++) {
+        for (let dx = 0; dx < footprint.width; dx++) {
+          occupiedWithoutPlacement.add(keyOf(building.x + dx, building.y + dy));
+        }
+      }
+    }
+    for (const deployment of enemyDeployments) {
+      if (placementIds.has(deployment.id)) continue;
+      addFootprint(deployment.type, deployment);
+    }
+
+    return occupiedWithoutPlacement;
   };
 
   const pickWeightedType = (choices: UnitType[]): UnitType => {
@@ -334,7 +418,6 @@ export const spawnEnemyUnits = (params: {
     return affordable.filter(type => getAnchorsForType(type).length > 0);
   };
 
-  const newDeploymentIds: number[] = [];
   let placementsMade = 0;
   while (placementsMade < placementLimit && canAffordAny(availableGold)) {
     if (placementsMade >= placementSlots) {
@@ -361,41 +444,45 @@ export const spawnEnemyUnits = (params: {
     availableGold -= incrementalCost(picked);
     unlockedUnits[picked] = true;
     weights[picked] = Math.max(0.4, weights[picked] * 0.85);
-    const spawnOffsets = getPlacementOffsets(picked);
-    for (const offset of spawnOffsets) {
-      const x = cell.x + offset.x;
-      const y = cell.y + offset.y;
-      addFootprintToOccupied(picked, { x, y });
-      const id = nextUnitId++;
-      enemyDeployments.push({ id, type: picked, x, y, xp: 0, tier: 1, placedTurn: params.turn });
-      newDeploymentIds.push(id);
-    }
+    newPlacements.push(placeEnemyFormation(picked, cell));
     placementsMade += 1;
   }
 
-  const totalEnemyCounts: Record<UnitType, number> = {
-    KNIGHT: 0,
-    GOBLIN: 0,
-    ARCHER: 0,
-    SNIPER: 0,
-    MAGE: 0,
-    GOLEM: 0,
-  };
-  for (const deployment of enemyDeployments) totalEnemyCounts[deployment.type] += 1;
+  if (isExactMirror(enemyDeployments) && newPlacements.length > 0) {
+    const candidates = [...newPlacements];
+    shuffleInPlace(candidates);
 
-  const mirrorMatch =
-    enemyDeployments.length === params.playerUnits.length &&
-    allTypes.every(type => totalEnemyCounts[type] === playerCounts[type]);
-  if (mirrorMatch && newDeploymentIds.length > 0) {
-    const candidates = enemyDeployments.filter(d => newDeploymentIds.includes(d.id));
-    const chosen = candidates[Math.floor(nextRand() * candidates.length)];
-    if (chosen) {
-      const originalCost = placementCost(chosen.type);
+    for (const placement of candidates) {
+      const originalPlacementCost = placementCost(placement.type);
+      const occupiedWithoutPlacement = buildOccupiedWithoutPlacement(placement);
       const alternatives = allTypes.filter(
-        type => type !== chosen.type && placementCost(type) <= originalCost && unlockedUnits[type]
+        type => type !== placement.type && placementCost(type) <= originalPlacementCost && unlockedUnits[type]
       );
-      if (alternatives.length > 0) {
-        chosen.type = alternatives[Math.floor(nextRand() * alternatives.length)];
+      shuffleInPlace(alternatives);
+
+      for (const alternative of alternatives) {
+        const replacementAnchor = isAnchorValidWithOccupied(alternative, placement.anchor, occupiedWithoutPlacement)
+          ? placement.anchor
+          : pickCellForType(alternative, occupiedWithoutPlacement);
+        if (!replacementAnchor) continue;
+
+        const placementIds = new Set(placement.deploymentIds);
+        const remainingDeployments = enemyDeployments.filter(deployment => !placementIds.has(deployment.id));
+        enemyDeployments.length = 0;
+        enemyDeployments.push(...remainingDeployments);
+
+        occupied.clear();
+        for (const key of occupiedWithoutPlacement) occupied.add(key);
+
+        const replacement = placeEnemyFormation(alternative, replacementAnchor, placement.deploymentIds);
+        placement.type = replacement.type;
+        placement.anchor = replacement.anchor;
+        placement.deploymentIds = replacement.deploymentIds;
+        break;
+      }
+
+      if (!isExactMirror(enemyDeployments)) {
+        break;
       }
     }
   }

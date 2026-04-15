@@ -52,6 +52,16 @@ npm run dev
 npm run build
 ```
 
+## Regression Tests
+
+Run the production build plus the deterministic gameplay regression suite:
+
+```bash
+npm test
+```
+
+This covers the enemy mirror-avoidance flow, AI loan opening behavior, building slot rules, and diagonal in-range cooldown holds.
+
 ## Simulation Scripts
 
 The repository also includes headless simulation helpers for balancing and AI checks:

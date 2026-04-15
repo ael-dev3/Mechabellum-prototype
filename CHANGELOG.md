@@ -2,6 +2,8 @@
 All notable changes to the MB (Fantasy Autobattler) prototype.
 
 ## 0.0.41 (current)
+- Fix enemy mirror-avoidance so alternative unit choices replace a full placement instead of mutating a single deployed unit.
+- Add deterministic headless regression checks for enemy mirror avoidance, AI loan opening, building slot rules, and diagonal in-range cooldown holds.
 - Cap XP at the upgrade threshold until the unit is upgraded.
 - Limit unit upgrades to once per turn for both player and enemy units.
 - Add clearer upgrade UX text for capped XP and per-turn limits.
