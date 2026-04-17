@@ -325,7 +325,8 @@ const prepareBuildingsForBattle = (buildings: readonly GameState['buildings'][nu
     };
   });
 
-const canModifyDeployments = (state: GameState): boolean => state.phase === 'DEPLOYMENT' || state.phase === 'INTERMISSION';
+const canModifyDeployments = (state: GameState): boolean =>
+  (state.phase === 'DEPLOYMENT' || state.phase === 'INTERMISSION') && !state.matchResult;
 
 const skipBattleWithoutUnits = (state: GameState): GameState => {
   const {
@@ -620,16 +621,13 @@ const endBattle = (state: GameState, params: { units: readonly UnitState[]; batt
 export const gameReducer = (state: GameState, action: GameAction): GameState => {
   switch (action.type) {
     case 'SELECT_UNIT': {
+      if (!canModifyDeployments(state)) return state;
       const alreadyUnlocked = state.unlockedUnits[action.unitType];
       if (alreadyUnlocked) {
         return { ...state, selectedUnitType: action.unitType, selectedPlacementKind: 'UNIT', message: null };
       }
 
       const blueprint = getUnitBlueprint(action.unitType);
-      if (!canModifyDeployments(state)) {
-        return { ...state, message: { kind: 'error', text: 'Units can only be unlocked between battles.' } };
-      }
-
       if (state.gold < blueprint.unlockCost) {
         return {
           ...state,
@@ -647,16 +645,13 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       };
     }
     case 'SELECT_BUILDING': {
+      if (!canModifyDeployments(state)) return state;
       const alreadyUnlocked = state.unlockedBuildings[action.buildingType];
       if (alreadyUnlocked) {
         return { ...state, selectedBuildingType: action.buildingType, selectedPlacementKind: 'BUILDING', message: null };
       }
 
       const blueprint = getBuildingBlueprint(action.buildingType);
-      if (!canModifyDeployments(state)) {
-        return { ...state, message: { kind: 'error', text: 'Buildings can only be unlocked between battles.' } };
-      }
-
       if (state.gold < blueprint.unlockCost) {
         return {
           ...state,
@@ -693,7 +688,6 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       return { ...state, hoveredCell: action.cell };
     case 'TAKE_LOAN': {
       if (!canModifyDeployments(state)) return state;
-      if (state.matchResult) return state;
       if (state.loanUsedThisTurn) {
         return { ...state, message: { kind: 'error', text: 'Loan already used this turn.' } };
       }

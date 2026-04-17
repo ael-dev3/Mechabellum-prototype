@@ -1,5 +1,5 @@
 import { GAME_CONFIG } from '../src/core/config/gameConfig';
-import { getBuildingBlueprint } from '../src/core/game/buildingCatalog';
+import { createBuilding, getBuildingBlueprint } from '../src/core/game/buildingCatalog';
 import { spawnEnemyUnits } from '../src/core/game/enemySpawner';
 import { isPlayerDeployableCell } from '../src/core/game/grid';
 import { createInitialGameState } from '../src/core/game/initialState';
@@ -20,6 +20,12 @@ const assertEqual = <T>(actual: T, expected: T, message: string): void => {
 
 const assertOk = (value: unknown, message: string): void => {
   if (!value) {
+    fail(message);
+  }
+};
+
+const assertSameReference = <T>(actual: T, expected: T, message: string): void => {
+  if (actual !== expected) {
     fail(message);
   }
 };
@@ -212,6 +218,75 @@ runTest('ranged units hold position when already in diagonal range but waiting o
     { x: knight.x, y: knight.y },
     'Target unit should remain in place when its own move cooldown has not expired.'
   );
+});
+
+runTest('finished matches reject unit unlocks and placements', () => {
+  const initial = createInitialGameState();
+  const placementCell = findFirstPlayerDeployableCell(initial);
+  const finishedState: GameState = {
+    ...initial,
+    phase: 'INTERMISSION',
+    turn: 4,
+    gold: 10,
+    matchResult: { winner: 'PLAYER', reason: 'HP' },
+    unlockedUnits: {
+      ...initial.unlockedUnits,
+      KNIGHT: true,
+    },
+    selectedUnitType: 'KNIGHT',
+  };
+
+  const afterUnlockAttempt = gameReducer(finishedState, { type: 'SELECT_UNIT', unitType: 'ARCHER' });
+  const afterPlacementAttempt = gameReducer(finishedState, { type: 'PLACE_UNIT', cell: placementCell });
+
+  assertSameReference(afterUnlockAttempt, finishedState, 'Finished matches must ignore post-game unit unlock attempts.');
+  assertSameReference(afterPlacementAttempt, finishedState, 'Finished matches must ignore post-game unit placements.');
+});
+
+runTest('finished matches reject building placement, unit upgrades, and building upgrades', () => {
+  const initial = createInitialGameState();
+  const placementCell = findFirstPlayerDeployableCell(initial);
+  const placedKnight = {
+    id: 101,
+    type: 'KNIGHT' as const,
+    x: placementCell.x,
+    y: placementCell.y,
+    xp: 999,
+    tier: 1,
+    placedTurn: 1,
+  };
+  const placedMine = createBuilding({
+    id: 201,
+    team: 'PLAYER',
+    type: 'GOLD_MINE',
+    x: placementCell.x + 4,
+    y: placementCell.y,
+    tier: 1,
+    upgradeReady: true,
+  });
+  const finishedState: GameState = {
+    ...initial,
+    phase: 'INTERMISSION',
+    turn: 4,
+    gold: 10,
+    matchResult: { winner: 'PLAYER', reason: 'HP' },
+    unlockedBuildings: {
+      ...initial.unlockedBuildings,
+      GOLD_MINE: true,
+    },
+    selectedBuildingType: 'GOLD_MINE',
+    deployments: [placedKnight],
+    units: [createUnit({ id: placedKnight.id, team: 'PLAYER', type: 'KNIGHT', x: placedKnight.x, y: placedKnight.y, xp: placedKnight.xp, tier: placedKnight.tier })],
+    buildings: [placedMine],
+  };
+
+  const afterBuildingPlacement = gameReducer(finishedState, { type: 'PLACE_BUILDING', cell: placementCell });
+  const afterUnitUpgrade = gameReducer(finishedState, { type: 'UPGRADE_UNIT', unitId: placedKnight.id });
+  const afterBuildingUpgrade = gameReducer(finishedState, { type: 'UPGRADE_BUILDING', buildingType: 'GOLD_MINE' });
+
+  assertSameReference(afterBuildingPlacement, finishedState, 'Finished matches must ignore post-game building placements.');
+  assertSameReference(afterUnitUpgrade, finishedState, 'Finished matches must ignore post-game unit upgrades.');
+  assertSameReference(afterBuildingUpgrade, finishedState, 'Finished matches must ignore post-game building upgrades.');
 });
 
 console.log('[done] gameplay regression scenarios passed');
