@@ -3,7 +3,7 @@ import type { GameState } from '../game/types';
 import type { Store } from '../state/Store';
 import type { CanvasRenderer } from '../rendering/CanvasRenderer';
 import type { CellCoord } from '../game/types';
-import { getUnitAt } from '../game/grid';
+import { getBuildingAt, getUnitAt } from '../game/grid';
 
 export class CanvasInput {
   private readonly canvas: HTMLCanvasElement;
@@ -158,11 +158,18 @@ export class CanvasInput {
 
   private handleCellAction(cell: CellCoord): void {
     const state = this.store.getState();
+    const canSelect = (state.phase === 'DEPLOYMENT' || state.phase === 'INTERMISSION') && !state.matchResult;
     const unit = getUnitAt(state.units, cell);
     if (unit && unit.team === 'PLAYER') {
-      const canSelect = (state.phase === 'DEPLOYMENT' || state.phase === 'INTERMISSION') && !state.matchResult;
       if (canSelect) {
         this.store.dispatch({ type: 'SELECT_PLACED_UNIT', unitId: unit.id });
+      }
+      return;
+    }
+    const building = getBuildingAt(state.buildings, cell);
+    if (building && building.team === 'PLAYER') {
+      if (canSelect) {
+        this.store.dispatch({ type: 'SELECT_PLACED_BUILDING', buildingId: building.id });
       }
       return;
     }

@@ -949,9 +949,22 @@ export class GameScreen implements Screen {
     this.store.dispatch({ type: 'UPGRADE_ALL_UNITS' });
   }
 
+  private getSelectedPlayerBuilding(state: GameState): GameState['buildings'][number] | null {
+    if (state.selectedBuildingId !== null) {
+      const selected = state.buildings.find(b => b.id === state.selectedBuildingId && b.team === 'PLAYER') ?? null;
+      if (selected) {
+        return selected;
+      }
+    }
+    const candidates = state.buildings.filter(b => b.type === state.selectedBuildingType && b.team === 'PLAYER');
+    return candidates.length === 1 ? candidates[0] : null;
+  }
+
   private handleUpgradeBuilding(): void {
     const state = this.store.getState();
-    this.store.dispatch({ type: 'UPGRADE_BUILDING', buildingType: state.selectedBuildingType });
+    const building = this.getSelectedPlayerBuilding(state);
+    if (!building) return;
+    this.store.dispatch({ type: 'UPGRADE_BUILDING', buildingId: building.id });
   }
 
   private getUpgradeAllSummary(state: GameState): { cost: number; readyCount: number } {
@@ -1337,8 +1350,7 @@ export class GameScreen implements Screen {
         b => b.type === state.selectedBuildingType && b.team === 'PLAYER'
       ).length;
       const limitReached = placedCount >= maxCount;
-      const existingBuilding =
-        state.buildings.find(b => b.type === state.selectedBuildingType && b.team === 'PLAYER') ?? null;
+      const existingBuilding = this.getSelectedPlayerBuilding(state);
       const buildingTier = existingBuilding?.tier ?? 1;
       const tierLabel = toRoman(buildingTier);
       const buildingStats = getBuildingStats(state.selectedBuildingType, buildingTier);
@@ -1570,11 +1582,11 @@ export class GameScreen implements Screen {
   private updateBuildingUpgradePanel(state: GameState): void {
     const canModify = (state.phase === 'DEPLOYMENT' || state.phase === 'INTERMISSION') && !state.matchResult;
     const blueprint = getBuildingBlueprint(state.selectedBuildingType);
-    const building =
-      state.buildings.find(b => b.type === state.selectedBuildingType && b.team === 'PLAYER') ?? null;
+    const playerBuildings = state.buildings.filter(b => b.type === state.selectedBuildingType && b.team === 'PLAYER');
+    const building = this.getSelectedPlayerBuilding(state);
     const upgradeCost = blueprint.placementCost;
 
-    if (!building) {
+    if (playerBuildings.length === 0) {
       this.buildingUpgradePanel.classList.add('building-upgrade--empty');
       this.buildingUpgradePanel.classList.remove('building-upgrade--ready');
       this.buildingUpgradeSummaryEl.textContent = `${blueprint.name} upgrades`;
@@ -1584,6 +1596,19 @@ export class GameScreen implements Screen {
       } else {
         this.buildingUpgradeHintEl.textContent = 'Upgrades unlock after the building survives a battle.';
       }
+      this.upgradeBuildingBtn.setText(`Upgrade (${upgradeCost}g)`);
+      this.upgradeBuildingBtn.setAriaDisabled(true);
+      return;
+    }
+
+    if (!building) {
+      const count = playerBuildings.length;
+      const plural = count === 1 ? '' : 's';
+      this.buildingUpgradePanel.classList.remove('building-upgrade--empty');
+      this.buildingUpgradePanel.classList.remove('building-upgrade--ready');
+      this.buildingUpgradeSummaryEl.textContent = `${blueprint.name} upgrades`;
+      this.buildingUpgradeStatsEl.textContent = `${count} ${blueprint.name}${plural} placed. Tap one on the map to inspect and upgrade that copy.`;
+      this.buildingUpgradeHintEl.textContent = 'Select a placed building to target its upgrade.';
       this.upgradeBuildingBtn.setText(`Upgrade (${upgradeCost}g)`);
       this.upgradeBuildingBtn.setAriaDisabled(true);
       return;
@@ -1618,7 +1643,7 @@ export class GameScreen implements Screen {
       : '';
 
     this.buildingUpgradePanel.classList.remove('building-upgrade--empty');
-    this.buildingUpgradeSummaryEl.textContent = `${blueprint.name} Tier ${tierLabel || tier}`;
+    this.buildingUpgradeSummaryEl.textContent = `${blueprint.name} Tier ${tierLabel || tier} | (${building.x}, ${building.y})`;
     this.buildingUpgradeStatsEl.textContent =
       `Current: HP ${stats.maxHp} | Aggro ${stats.aggroRange}.${attackText}${incomeText}${spawnText}` +
       ` Next ${nextTierLabel || nextTier}: HP ${nextStats.maxHp} | Aggro ${nextStats.aggroRange}.${nextAttackText}${nextIncomeText}${nextSpawnText}`;
@@ -1770,7 +1795,13 @@ export class GameScreen implements Screen {
         building.team === 'PLAYER' && canModify && building.upgradeReady
           ? ` Upgrade ready (${blueprint.placementCost}g).`
           : '';
-      return `${coordText} ${blueprint.name}${tierText} (${building.team === 'PLAYER' ? 'You' : 'Enemy'}): HP ${building.hp}/${stats.maxHp}, Aggro ${stats.aggroRange}, Size ${footprint.width}x${footprint.height}${attackText}${incomeText}${spawnText}.${upgradeNote}`;
+      const selectionNote =
+        building.team === 'PLAYER' && canModify
+          ? state.selectedBuildingId === building.id
+            ? ' Tap again to deselect.'
+            : ' Tap to select this building for upgrades.'
+          : '';
+      return `${coordText} ${blueprint.name}${tierText} (${building.team === 'PLAYER' ? 'You' : 'Enemy'}): HP ${building.hp}/${stats.maxHp}, Aggro ${stats.aggroRange}, Size ${footprint.width}x${footprint.height}${attackText}${incomeText}${spawnText}.${upgradeNote}${selectionNote}`;
     }
 
     const isUnitPlacement = state.selectedPlacementKind === 'UNIT';

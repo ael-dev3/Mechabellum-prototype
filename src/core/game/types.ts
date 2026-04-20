@@ -178,6 +178,7 @@ export interface GameState {
   selectedBuildingType: BuildingType;
   selectedPlacementKind: PlacementKind;
   selectedUnitId: number | null;
+  selectedBuildingId: number | null;
   hoveredCell: CellCoord | null;
   message: UiMessage | null;
   sfxEventId: number;

@@ -164,6 +164,7 @@ runTest('building placement does not consume unit placement slots', () => {
       ...initial.unlockedBuildings,
       GOLD_MINE: true,
     },
+    selectedBuildingId: null,
     message: null,
   };
 
@@ -275,6 +276,7 @@ runTest('finished matches reject building placement, unit upgrades, and building
       GOLD_MINE: true,
     },
     selectedBuildingType: 'GOLD_MINE',
+    selectedBuildingId: placedMine.id,
     deployments: [placedKnight],
     units: [createUnit({ id: placedKnight.id, team: 'PLAYER', type: 'KNIGHT', x: placedKnight.x, y: placedKnight.y, xp: placedKnight.xp, tier: placedKnight.tier })],
     buildings: [placedMine],
@@ -282,11 +284,61 @@ runTest('finished matches reject building placement, unit upgrades, and building
 
   const afterBuildingPlacement = gameReducer(finishedState, { type: 'PLACE_BUILDING', cell: placementCell });
   const afterUnitUpgrade = gameReducer(finishedState, { type: 'UPGRADE_UNIT', unitId: placedKnight.id });
-  const afterBuildingUpgrade = gameReducer(finishedState, { type: 'UPGRADE_BUILDING', buildingType: 'GOLD_MINE' });
+  const afterBuildingUpgrade = gameReducer(finishedState, { type: 'UPGRADE_BUILDING', buildingId: placedMine.id });
 
   assertSameReference(afterBuildingPlacement, finishedState, 'Finished matches must ignore post-game building placements.');
   assertSameReference(afterUnitUpgrade, finishedState, 'Finished matches must ignore post-game unit upgrades.');
   assertSameReference(afterBuildingUpgrade, finishedState, 'Finished matches must ignore post-game building upgrades.');
+});
+
+runTest('selected building upgrades target the clicked copy instead of the first building of that type', () => {
+  const initial = createInitialGameState();
+  const firstTower = createBuilding({
+    id: 301,
+    team: 'PLAYER',
+    type: 'ARCHER_TOWER',
+    x: 2,
+    y: 18,
+    tier: 2,
+    upgradeReady: false,
+  });
+  const secondTower = createBuilding({
+    id: 302,
+    team: 'PLAYER',
+    type: 'ARCHER_TOWER',
+    x: 8,
+    y: 18,
+    tier: 1,
+    upgradeReady: true,
+  });
+  const state: GameState = {
+    ...initial,
+    phase: 'INTERMISSION',
+    turn: 5,
+    gold: 10,
+    unlockedBuildings: {
+      ...initial.unlockedBuildings,
+      ARCHER_TOWER: true,
+    },
+    selectedBuildingType: 'ARCHER_TOWER',
+    selectedBuildingId: null,
+    buildings: [firstTower, secondTower],
+    message: null,
+  };
+
+  const selectedState = gameReducer(state, { type: 'SELECT_PLACED_BUILDING', buildingId: secondTower.id });
+  assertEqual(selectedState.selectedBuildingId, secondTower.id, 'Clicking a placed building should select that exact copy.');
+
+  const upgradedState = gameReducer(selectedState, { type: 'UPGRADE_BUILDING', buildingId: secondTower.id });
+  const upgradedFirstTower = upgradedState.buildings.find(building => building.id === firstTower.id);
+  const upgradedSecondTower = upgradedState.buildings.find(building => building.id === secondTower.id);
+
+  assertOk(upgradedFirstTower, 'The first tower should still exist after upgrading a different tower.');
+  assertOk(upgradedSecondTower, 'The selected tower should still exist after upgrading.');
+  assertEqual(upgradedFirstTower!.tier, 2, 'The first tower must keep its own tier.');
+  assertEqual(upgradedSecondTower!.tier, 2, 'The selected tower should gain the upgrade.');
+  assertEqual(upgradedSecondTower!.upgradeReady, false, 'The upgraded tower should consume its ready state.');
+  assertEqual(upgradedState.gold, 7, 'Upgrading the selected tower should charge the tower upgrade cost once.');
 });
 
 console.log('[done] gameplay regression scenarios passed');

@@ -10,6 +10,11 @@ export interface SelectPlacedUnitAction {
   unitId: number | null;
 }
 
+export interface SelectPlacedBuildingAction {
+  type: 'SELECT_PLACED_BUILDING';
+  buildingId: number | null;
+}
+
 export interface SelectBuildingAction {
   type: 'SELECT_BUILDING';
   buildingType: BuildingType;
@@ -76,12 +81,13 @@ export interface UpgradeAllUnitsAction {
 
 export interface UpgradeBuildingAction {
   type: 'UPGRADE_BUILDING';
-  buildingType: BuildingType;
+  buildingId: number;
 }
 
 export type GameAction =
   | SelectUnitAction
   | SelectPlacedUnitAction
+  | SelectPlacedBuildingAction
   | SelectBuildingAction
   | SetHoveredCellAction
   | PlaceUnitAction

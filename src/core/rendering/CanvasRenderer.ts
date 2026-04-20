@@ -265,7 +265,7 @@ export class CanvasRenderer {
     // Buildings
     for (const building of state.buildings) {
       if (building.hp <= 0) continue;
-      this.drawBuilding(layout, building);
+      this.drawBuilding(layout, building, state.selectedBuildingId === building.id);
     }
 
     // Units
@@ -434,7 +434,7 @@ export class CanvasRenderer {
     }
   }
 
-  private drawBuilding(layout: GridLayout, building: GameState['buildings'][number]): void {
+  private drawBuilding(layout: GridLayout, building: GameState['buildings'][number], isSelected: boolean): void {
     const ctx = this.ctx;
     const blueprint = getBuildingBlueprint(building.type);
     const footprint = getBuildingFootprint(building.type);
@@ -481,6 +481,21 @@ export class CanvasRenderer {
       ctx.fillStyle = 'rgba(255, 245, 230, 0.9)';
       ctx.fillText(tierText, left + width - 5, top + 3);
     }
+    if (isSelected) {
+      this.drawBuildingSelection(left, top, width, height, layout.cellSizePx);
+    }
+    ctx.restore();
+  }
+
+  private drawBuildingSelection(left: number, top: number, width: number, height: number, cellSizePx: number): void {
+    const ctx = this.ctx;
+    const inset = Math.max(2, cellSizePx * 0.08);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(96, 209, 255, 0.95)';
+    ctx.lineWidth = Math.max(3, Math.floor(cellSizePx * 0.16));
+    ctx.shadowColor = 'rgba(96, 209, 255, 0.65)';
+    ctx.shadowBlur = Math.max(8, cellSizePx * 0.9);
+    ctx.strokeRect(left - inset, top - inset, width + inset * 2, height + inset * 2);
     ctx.restore();
   }
 

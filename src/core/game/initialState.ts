@@ -60,6 +60,7 @@ export const createInitialGameState = (): GameState => ({
   selectedBuildingType: 'GOLD_MINE',
   selectedPlacementKind: 'UNIT',
   selectedUnitId: null,
+  selectedBuildingId: null,
   hoveredCell: null,
   message: {
     kind: 'info',

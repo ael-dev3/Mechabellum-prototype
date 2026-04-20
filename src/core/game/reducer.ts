@@ -648,7 +648,13 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       if (!canModifyDeployments(state)) return state;
       const alreadyUnlocked = state.unlockedBuildings[action.buildingType];
       if (alreadyUnlocked) {
-        return { ...state, selectedBuildingType: action.buildingType, selectedPlacementKind: 'BUILDING', message: null };
+        return {
+          ...state,
+          selectedBuildingType: action.buildingType,
+          selectedPlacementKind: 'BUILDING',
+          selectedBuildingId: null,
+          message: null,
+        };
       }
 
       const blueprint = getBuildingBlueprint(action.buildingType);
@@ -668,6 +674,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         unlockedBuildings: { ...state.unlockedBuildings, [action.buildingType]: true },
         selectedBuildingType: action.buildingType,
         selectedPlacementKind: 'BUILDING',
+        selectedBuildingId: null,
         message: { kind: 'success', text: `${blueprint.name} unlocked.` },
       };
     }
@@ -682,7 +689,25 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       if (state.selectedUnitId === action.unitId) {
         return { ...state, selectedUnitId: null };
       }
-      return { ...state, selectedUnitId: action.unitId };
+      return { ...state, selectedUnitId: action.unitId, selectedBuildingId: null };
+    }
+    case 'SELECT_PLACED_BUILDING': {
+      if (action.buildingId === null) {
+        return { ...state, selectedBuildingId: null };
+      }
+      const building = state.buildings.find(b => b.id === action.buildingId && b.team === 'PLAYER');
+      if (!building) {
+        return { ...state, selectedBuildingId: null };
+      }
+      if (state.selectedBuildingId === action.buildingId) {
+        return { ...state, selectedBuildingId: null };
+      }
+      return {
+        ...state,
+        selectedBuildingId: action.buildingId,
+        selectedBuildingType: building.type,
+        selectedUnitId: null,
+      };
     }
     case 'SET_HOVERED_CELL':
       return { ...state, hoveredCell: action.cell };
@@ -850,6 +875,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         gold: state.gold - blueprint.placementCost,
         buildings: [...state.buildings, building],
         nextBuildingId: state.nextBuildingId + 1,
+        selectedBuildingId: building.id,
         message: null,
       };
     }
@@ -975,10 +1001,9 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
     case 'UPGRADE_BUILDING': {
       if (!canModifyDeployments(state)) return state;
 
-      const building = state.buildings.find(b => b.type === action.buildingType && b.team === 'PLAYER');
+      const building = state.buildings.find(b => b.id === action.buildingId && b.team === 'PLAYER');
       if (!building) {
-        const blueprint = getBuildingBlueprint(action.buildingType);
-        return { ...state, message: { kind: 'error', text: `${blueprint.name} is not on your side.` } };
+        return { ...state, selectedBuildingId: null, message: { kind: 'error', text: 'Select a building on your side to upgrade.' } };
       }
 
       if (!building.upgradeReady) {
@@ -1019,6 +1044,8 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         ...state,
         gold: state.gold - upgradeCost,
         buildings,
+        selectedBuildingId: building.id,
+        selectedBuildingType: building.type,
         message: { kind: 'success', text: `${blueprint.name} upgraded to Tier ${toRoman(nextTier)}.` },
       };
     }
