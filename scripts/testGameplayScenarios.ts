@@ -341,4 +341,59 @@ runTest('selected building upgrades target the clicked copy instead of the first
   assertEqual(upgradedState.gold, 7, 'Upgrading the selected tower should charge the tower upgrade cost once.');
 });
 
+runTest('switching placement modes clears stale selected unit and building targets', () => {
+  const initial = createInitialGameState();
+  const placedKnight = {
+    id: 401,
+    type: 'KNIGHT' as const,
+    x: 5,
+    y: 18,
+    xp: 0,
+    tier: 1,
+    placedTurn: 1,
+  };
+  const placedMine = createBuilding({
+    id: 402,
+    team: 'PLAYER',
+    type: 'GOLD_MINE',
+    x: 9,
+    y: 18,
+    tier: 1,
+    upgradeReady: true,
+  });
+  const state: GameState = {
+    ...initial,
+    phase: 'INTERMISSION',
+    unlockedUnits: {
+      ...initial.unlockedUnits,
+      KNIGHT: true,
+      ARCHER: true,
+    },
+    unlockedBuildings: {
+      ...initial.unlockedBuildings,
+      GOLD_MINE: true,
+      ARCHER_TOWER: true,
+    },
+    deployments: [placedKnight],
+    buildings: [placedMine],
+    selectedUnitId: placedKnight.id,
+    selectedBuildingId: placedMine.id,
+    selectedUnitType: 'KNIGHT',
+    selectedBuildingType: 'GOLD_MINE',
+    selectedPlacementKind: 'UNIT',
+  };
+
+  const afterBuildingPalette = gameReducer(state, { type: 'SELECT_BUILDING', buildingType: 'ARCHER_TOWER' });
+  assertEqual(afterBuildingPalette.selectedPlacementKind, 'BUILDING', 'Building palette selection should switch placement mode.');
+  assertEqual(afterBuildingPalette.selectedBuildingType, 'ARCHER_TOWER', 'Building palette selection should update the active building type.');
+  assertEqual(afterBuildingPalette.selectedUnitId, null, 'Building palette selection should clear stale selected units.');
+  assertEqual(afterBuildingPalette.selectedBuildingId, null, 'Building palette selection should clear stale selected buildings.');
+
+  const afterUnitPalette = gameReducer(state, { type: 'SELECT_UNIT', unitType: 'ARCHER' });
+  assertEqual(afterUnitPalette.selectedPlacementKind, 'UNIT', 'Unit palette selection should switch placement mode.');
+  assertEqual(afterUnitPalette.selectedUnitType, 'ARCHER', 'Unit palette selection should update the active unit type.');
+  assertEqual(afterUnitPalette.selectedUnitId, null, 'Unit palette selection should clear stale selected units.');
+  assertEqual(afterUnitPalette.selectedBuildingId, null, 'Unit palette selection should clear stale selected buildings.');
+});
+
 console.log('[done] gameplay regression scenarios passed');

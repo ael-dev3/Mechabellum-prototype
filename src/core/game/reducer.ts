@@ -624,7 +624,14 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       if (!canModifyDeployments(state)) return state;
       const alreadyUnlocked = state.unlockedUnits[action.unitType];
       if (alreadyUnlocked) {
-        return { ...state, selectedUnitType: action.unitType, selectedPlacementKind: 'UNIT', message: null };
+        return {
+          ...state,
+          selectedUnitType: action.unitType,
+          selectedPlacementKind: 'UNIT',
+          selectedUnitId: null,
+          selectedBuildingId: null,
+          message: null,
+        };
       }
 
       const blueprint = getUnitBlueprint(action.unitType);
@@ -641,6 +648,8 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         unlockedUnits: { ...state.unlockedUnits, [action.unitType]: true },
         selectedUnitType: action.unitType,
         selectedPlacementKind: 'UNIT',
+        selectedUnitId: null,
+        selectedBuildingId: null,
         message: { kind: 'success', text: `${blueprint.name} unlocked.` },
       };
     }
@@ -652,6 +661,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
           ...state,
           selectedBuildingType: action.buildingType,
           selectedPlacementKind: 'BUILDING',
+          selectedUnitId: null,
           selectedBuildingId: null,
           message: null,
         };
@@ -674,6 +684,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         unlockedBuildings: { ...state.unlockedBuildings, [action.buildingType]: true },
         selectedBuildingType: action.buildingType,
         selectedPlacementKind: 'BUILDING',
+        selectedUnitId: null,
         selectedBuildingId: null,
         message: { kind: 'success', text: `${blueprint.name} unlocked.` },
       };
